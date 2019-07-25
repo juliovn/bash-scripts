@@ -178,6 +178,11 @@ shift "$(( OPTIND -1 ))"
 # Start timer here
 if [[ -n "${TASK}" ]]; then
 
+    if check_task_status; then
+        CURRENT_TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1)
+        fail_quit 1 "exit" "${CURRENT_TASK} is the current task, please stop that before starting anoter."
+    fi
+
     start_timer ${PROJECT}
 fi
 
