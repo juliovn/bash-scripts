@@ -88,7 +88,7 @@ if [[ ! -e "${TIMELOG}" ]]; then
     touch ${TIMELOG}
 
     # Output header to log file
-    echo "Start,End,Task,Project,ID" >> ${TIMELOG}
+    echo "Start, End, Task, Project, ID" >> ${TIMELOG}
 
     fail_quit "${?}" "exit" "Could not create ${TIMELOG}"
 fi
@@ -100,9 +100,23 @@ fi
 
 # Start timer function
 function start_timer {
+
+    log "Starting timer"
+
+    # Start off with current epoch date
     local start_epoch=$(date "+%s")
 
 
+}
+
+# Stop timer function
+function stop_timer {
+    log "Stop timer"
+}
+
+# Abort timer function
+function abort_timer {
+    log "Abort timer"
 }
 
 # Parse options
@@ -142,5 +156,41 @@ done
 # Shift parameters
 shift "$(( OPTIND -1 ))"
 
+# Checks for signals
+
+# Quick check to see if user passed both abort and stop signals
+if [[ "${STOP_SIGNAL}" = "true" && "${ABORT_SIGNAL}" = "true" ]]; then
+    fail_quit 1 "exit" "Both abort and stop signals passed, please pass only one."
+fi
+
+# Check if there is an active task (this will return 1 if so)
+COUNT=$(cut -d "," -f 1- ${TIMELOG} | tail -1 | wc -w)
+
+# Stop signal
+if [[ "${STOP_SIGNAL}" = "true" ]]; then
+    if [[ "${COUNT}" -eq 1 ]]; then
+        # There is an active task so we can stop it and log
+        stop_timer
+    else
+        fail_quit 1 "exit" "There is no active timer to stop."
+    fi
+fi
+
+# Abort signal
+if [[ "${ABORT_SIGNAL}" = "true" ]]; then
+    if [[ "${COUNT}" -eq 1 ]]; then
+        # There is an active timer so we can stop and do not log, as the abort signal was passed
+        abort_timer
+    else
+        fail_quit 1 "exit" "There is not active timer to abort."
+    fi
+fi
+
 # Finish script
 exit ${EXIT_STATUS}
+
+
+
+
+
+
