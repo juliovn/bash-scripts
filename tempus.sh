@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # This script is a tool to track time spent on tasks
 
 # Check if user is root
@@ -21,14 +20,12 @@ UNIQ_ID=$(date +%s%N${RANDOM}${RANDOM} | sha256sum | head -c6)
 # Function that logs messages to standard output and to syslog
 function log {
     local MESSAGE="${@}"
-    if [[ "${VERBOSE}" = "true" ]]; then
-        echo "${MESSAGE}"
-    fi
+    echo "${MESSAGE}"
     logger -t "${0}" "${MESSAGE}"
 }
 
 function fail_quit {
-	# Error code
+	# exit code
     CODE="${1}"
     shift
 
@@ -71,7 +68,9 @@ function elapsed_time {
 # Function that will output usage statement
 function usage {
     echo "Usage: ${0} [-jdaclh] [-s TASK] [-p [PROJECT] ]" >&2
+    echo >&2
     echo "This script is a tool to track time spent on tasks" >&2
+    echo >&2
     echo "  -s TASK     Will start a new timer for TASK" >&2
     echo "  -p PROJECT  Assign TASK to PROJECT" >&2
     echo "  -j          List all projects" >&2
@@ -101,11 +100,13 @@ fi
 # Start timer function
 function start_timer {
 
-    log "Starting timer"
+    log "Starting timer for ${TASK}"
 
     # Start off with current epoch date
     local start_epoch=$(date "+%s")
 
+    # Convert eposh timestamp to date
+    
 
 }
 
@@ -125,11 +126,9 @@ do
     case ${OPTION} in
         s)
             TASK="${OPTARG}"
-            echo "${TASK}"
             ;;
         p)
             PROJECT="${OPTARG}"
-            echo "${PROJECT}"
             ;;
         j)
             echo "list projects called"
@@ -182,8 +181,13 @@ if [[ "${ABORT_SIGNAL}" = "true" ]]; then
         # There is an active timer so we can stop and do not log, as the abort signal was passed
         abort_timer
     else
-        fail_quit 1 "exit" "There is not active timer to abort."
+        fail_quit 1 "exit" "There is no active timer to abort."
     fi
+fi
+
+# Start timer here
+if [[ -n "${TASK}" ]]; then
+    start_timer ${PROJECT}
 fi
 
 # Finish script
