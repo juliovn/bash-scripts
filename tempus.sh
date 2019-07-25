@@ -87,7 +87,7 @@ if [[ ! -e "${TIMELOG}" ]]; then
     touch ${TIMELOG}
 
     # Output header to log file
-    echo "Start, End, Task, Project, ID" >> ${TIMELOG}
+    echo "Start, Task, Project, End, ID" >> ${TIMELOG}
 
     fail_quit "${?}" "exit" "Could not create ${TIMELOG}"
 fi
@@ -103,10 +103,13 @@ function start_timer {
     log "Starting timer for ${TASK}"
 
     # Start off with current epoch date
-    local start_epoch=$(date "+%s")
+    local START_EPOCH=$(date "+%s")
 
-    # Convert eposh timestamp to date
-    
+    # Convert epoch to timestamp for log
+    local TIMESTAMP=$(date -d @${START_EPOCH} | date '+%b %d %H:%M:%S')
+
+    # Insert data into log
+    echo "${TIMESTAMP}, ${TASK}, ${PROJECT}, " >> ${TIMELOG}
 
 }
 
@@ -155,6 +158,11 @@ done
 # Shift parameters
 shift "$(( OPTIND -1 ))"
 
+# Start timer here
+if [[ -n "${TASK}" ]]; then
+    start_timer ${PROJECT}
+fi
+
 # Checks for signals
 
 # Quick check to see if user passed both abort and stop signals
@@ -163,11 +171,12 @@ if [[ "${STOP_SIGNAL}" = "true" && "${ABORT_SIGNAL}" = "true" ]]; then
 fi
 
 # Check if there is an active task (this will return 1 if so)
-COUNT=$(cut -d "," -f 1- ${TIMELOG} | tail -1 | wc -w)
+# To clarify this is looking for the "End" column and if there a value there
+COUNT=$(cut -d "," -f 4 ${TIMELOG} | tail -1 | wc -w)
 
 # Stop signal
 if [[ "${STOP_SIGNAL}" = "true" ]]; then
-    if [[ "${COUNT}" -eq 1 ]]; then
+    if [[ "${COUNT}" -eq 0 ]]; then
         # There is an active task so we can stop it and log
         stop_timer
     else
@@ -177,17 +186,12 @@ fi
 
 # Abort signal
 if [[ "${ABORT_SIGNAL}" = "true" ]]; then
-    if [[ "${COUNT}" -eq 1 ]]; then
+    if [[ "${COUNT}" -eq 0 ]]; then
         # There is an active timer so we can stop and do not log, as the abort signal was passed
         abort_timer
     else
         fail_quit 1 "exit" "There is no active timer to abort."
     fi
-fi
-
-# Start timer here
-if [[ -n "${TASK}" ]]; then
-    start_timer ${PROJECT}
 fi
 
 # Finish script
