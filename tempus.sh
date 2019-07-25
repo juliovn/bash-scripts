@@ -123,6 +123,23 @@ function abort_timer {
     log "Abort timer"
 }
 
+# Function to check if there is an active task
+function check_task_status {
+
+    # Check if there is an active task
+    # To clarify this is looking for the "End" column and if there a value there
+    COUNT=$(cut -d "," -f 4 ${TIMELOG} | tail -1 | wc -w)
+
+    # Check value of count
+    if [[ "${COUNT}" -eq 0 ]]; then
+        # There is an active timer
+        return 0
+    else
+        return 1
+    fi
+
+}
+
 # Parse options
 while getopts s:p:jdaclh OPTION
 do
@@ -160,6 +177,7 @@ shift "$(( OPTIND -1 ))"
 
 # Start timer here
 if [[ -n "${TASK}" ]]; then
+
     start_timer ${PROJECT}
 fi
 
@@ -170,14 +188,10 @@ if [[ "${STOP_SIGNAL}" = "true" && "${ABORT_SIGNAL}" = "true" ]]; then
     fail_quit 1 "exit" "Both abort and stop signals passed, please pass only one."
 fi
 
-# Check if there is an active task (this will return 1 if so)
-# To clarify this is looking for the "End" column and if there a value there
-COUNT=$(cut -d "," -f 4 ${TIMELOG} | tail -1 | wc -w)
-
 # Stop signal
 if [[ "${STOP_SIGNAL}" = "true" ]]; then
-    if [[ "${COUNT}" -eq 0 ]]; then
-        # There is an active task so we can stop it and log
+
+    if check_task_status ; then
         stop_timer
     else
         fail_quit 1 "exit" "There is no active timer to stop."
@@ -186,8 +200,7 @@ fi
 
 # Abort signal
 if [[ "${ABORT_SIGNAL}" = "true" ]]; then
-    if [[ "${COUNT}" -eq 0 ]]; then
-        # There is an active timer so we can stop and do not log, as the abort signal was passed
+    if check_task_status ; then
         abort_timer
     else
         fail_quit 1 "exit" "There is no active timer to abort."
