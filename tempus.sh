@@ -15,6 +15,9 @@ EXIT_STATUS=0
 # Timelog file
 TIMELOG="$HOME/.timelog"
 
+# Generate ID for logging the task entries
+UNIQ_ID=$(date +%s%N${RANDOM}${RANDOM} | sha256sum | head -c6)
+
 # Function that logs messages to standard output and to syslog
 function log {
     local MESSAGE="${@}"
@@ -57,6 +60,14 @@ function fail_quit {
     fi
 }
 
+# Helper function to get elapsed time from the epochs
+function elapsed_time {
+    ((h=${1}/3600))
+    ((m=(${1}%3600)/60))
+    ((s=${1}%60))
+    printf "%02d:%02d:%02d\n" $h $m $s
+}
+
 # Function that will output usage statement
 function usage {
     echo "Usage: ${0} [-jdaclh] [-s TASK] [-p [PROJECT] ]" >&2
@@ -76,6 +87,9 @@ function usage {
 if [[ ! -e "${TIMELOG}" ]]; then
     touch ${TIMELOG}
 
+    # Output header to log file
+    echo "Start,End,Task,Project,ID" >> ${TIMELOG}
+
     fail_quit "${?}" "exit" "Could not create ${TIMELOG}"
 fi
 
@@ -84,9 +98,12 @@ if [[ "${#}" -lt 1 ]]; then
     usage
 fi
 
-# Main functions will go here
+# Start timer function
+function start_timer {
+    local start_epoch=$(date "+%s")
 
 
+}
 
 # Parse options
 while getopts s:p:jdaclh OPTION
