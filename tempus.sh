@@ -131,8 +131,8 @@ function stop_timer {
 
     # Gather data on current task
     local START_TIME=$(cut -d "," -f 1 ${TIMELOG} | tail -1)
-    local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1)
-    local PROJECT=$(cut -d "," -f 3 ${TIMELOG} | tail -1)
+    local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1 | tr -d '[:space:]')
+    local PROJECT=$(cut -d "," -f 3 ${TIMELOG} | tail -1 | tr -d '[:space:]')
 
     # Get current epoch date for start and end time
     local END_EPOCH=$(date "+%s")
@@ -157,6 +157,25 @@ function stop_timer {
 
     # Exit script successfully
     exit 0
+}
+
+# Diplay timelog function
+function display_log {
+
+    # Display header
+    printf "%s\t" "ID" "TASK" "PROJ" "START" "END" "ELAPSED" ; echo
+
+    # Loop through log entries
+    while IFS="," read START TASK PROJECT END ID; do
+
+        # Remove CSV header
+        if [[ "${START}" = "Start" ]]; then
+            continue
+        fi
+
+        
+
+    done < ${TIMELOG}
 }
 
 # Abort timer function
@@ -214,7 +233,7 @@ do
             CLEANUP_SIGNAL="true"
             ;;
         l)
-            echo "Log function called for"
+            display_log
             ;;
         h)
             usage
