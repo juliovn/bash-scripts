@@ -97,7 +97,7 @@ if [[ ! -e "${TIMELOG}" ]]; then
     touch ${TIMELOG}
 
     # Output header to log file
-    echo "Start, Task, Project, End, ID" >> ${TIMELOG}
+    echo "Start, Task, Project, End, ID, Elapsed" >> ${TIMELOG}
 
     fail_quit "${?}" "exit" "Could not create ${TIMELOG}"
 fi
@@ -131,8 +131,8 @@ function stop_timer {
 
     # Gather data on current task
     local START_TIME=$(cut -d "," -f 1 ${TIMELOG} | tail -1)
-    local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1 | tr -d '[:space:]')
-    local PROJECT=$(cut -d "," -f 3 ${TIMELOG} | tail -1 | tr -d '[:space:]')
+    local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1 | sed -e 's/^[ \t]*//')
+    local PROJECT=$(cut -d "," -f 3 ${TIMELOG} | tail -1 | sed -e 's/^[ \t]*//')
 
     # Get current epoch date for start and end time
     local END_EPOCH=$(date "+%s")
@@ -146,14 +146,14 @@ function stop_timer {
     # Remove last line from log to re-insert
     sed -i '$ d' ${TIMELOG}
 
-    # Insert data into log
-    echo "${START_TIME}, ${TASK}, ${PROJECT}, ${END_TIME}, ${UNIQ_ID}" >> ${TIMELOG}
-
     # Calculate elapsed time to output
     elapsed_time "${START_EPOCH}" "${END_EPOCH}"
 
     # Output message to screen
     log "Elapsed time for ${TASK} is: ${ELAPSED_TIME}"
+
+    # Insert data into log
+    echo "${START_TIME}, ${TASK}, ${PROJECT}, ${END_TIME}, ${UNIQ_ID}, ${ELAPSED_TIME}" >> ${TIMELOG}
 
     # Exit script successfully
     exit 0
@@ -162,20 +162,14 @@ function stop_timer {
 # Diplay timelog function
 function display_log {
 
-    # Display header
-    printf "%s\t" "ID" "TASK" "PROJ" "START" "END" "ELAPSED" ; echo
+    # This may seem like too small for a function but I am planning more stuff for this one, like calculating total and maybe date ranges
 
-    # Loop through log entries
-    while IFS="," read START TASK PROJECT END ID; do
+    # Output table
+    column -t -s "," ${TIMELOG}
 
-        # Remove CSV header
-        if [[ "${START}" = "Start" ]]; then
-            continue
-        fi
+    # Exit succesfully
+    exit 0
 
-        
-
-    done < ${TIMELOG}
 }
 
 # Abort timer function
@@ -191,6 +185,19 @@ function abort_timer {
 
     # Exit successfully
     exit 0
+}
+
+# Function that will display all projects on the log
+function display_projects {
+
+  # Get list of projects, remove duplicates and some whitespace
+  PROJECT_LIST=$(cut -d "," -f 3 ${TIMELOG} | grep -v "Project" | sed -e 's/^[ \t]*//' | sed '/^$/d' | sort | uniq)
+
+  # Display list
+  echo "${PROJECT_LIST}"
+
+  # Exit successfully
+  exit 0
 }
 
 # Function to check if there is an active task
@@ -221,7 +228,7 @@ do
             PROJECT="${OPTARG}"
             ;;
         j)
-            echo "list projects called"
+            display_projects
             ;;
         d)
             STOP_SIGNAL="true"
