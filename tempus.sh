@@ -86,7 +86,7 @@ function usage {
     echo "  -j          List all projects" >&2
     echo "  -d          Stops current running TASK and save to ${TIMELOG}" >&2
     echo "  -a          Abort current running TASK and don't save to ${TIMELOG}" >&2
-    echo "  -c          Cleanup ${TIMELOG} deleting all entries (will be prompted for backup option)" >&2
+    echo "  -c          Cleanup ${TIMELOG} deleting all entries" >&2
     echo "  -l          Displays contents of ${TIMELOG} to screen and formatted" >&2
     echo "  -h          Displays this usage statement" >&2
     exit 1
@@ -288,6 +288,27 @@ if [[ "${ABORT_SIGNAL}" = "true" ]]; then
     else
         fail_quit 1 "exit" "There is no active timer to abort."
     fi
+fi
+
+# Cleanup signal
+if [[ "${CLEANUP_SIGNAL}" = "true" ]]; then
+  # Get confirmation from user
+  read -p "This will remove all data from ${TIMELOG}. Are you sure you want to continue? [y/n] " CONFIRMATION
+
+  if [[ "${CONFIRMATION}" != "y" ]]; then
+    fail_quit 1 "exit" "Confirmation not given for cleanup, exiting..."
+  fi
+
+  log "Cleanup up ${TIMELOG}..."
+
+  rm -f ${TIMELOG}
+
+  fail_quit "${?}" "exit" "Could not remove ${TIMELOG}"
+
+  log "Done."
+
+  # Exit successfully
+  exit 0
 fi
 
 # Finish script
