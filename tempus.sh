@@ -57,8 +57,18 @@ function fail_quit {
     fi
 }
 
-# Helper function to get elapsed time from the epochs
+# Helper function to calculate elapsed time
 function elapsed_time {
+    local START_TIME="${1}"
+    shift
+    local END_TIME="${1}"
+
+    local TIME_DIFF=$(expr ${END_TIME} - ${START_TIME})
+    ELAPSED_TIME=$(convert_seconds "$TIME_DIFF")
+}
+
+# Helper function to convert seconds
+function convert_seconds {
     ((h=${1}/3600))
     ((m=(${1}%3600)/60))
     ((s=${1}%60))
@@ -106,10 +116,10 @@ function start_timer {
     local START_EPOCH=$(date "+%s")
 
     # Convert epoch to timestamp for log
-    local TIMESTAMP=$(date '+%b %d %H:%M:%S' -d @${START_EPOCH})
+    local START_TIME=$(date '+%b %d %H:%M:%S' -d @${START_EPOCH})
 
     # Insert data into log
-    echo "${TIMESTAMP}, ${TASK}, ${PROJECT}, " >> ${TIMELOG}
+    echo "${START_TIME}, ${TASK}, ${PROJECT}, " >> ${TIMELOG}
 
     # Exit script successfully
     exit 0
@@ -124,11 +134,12 @@ function stop_timer {
     local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1)
     local PROJECT=$(cut -d "," -f 3 ${TIMELOG} | tail -1)
 
-    # Get current epoch date for end time
+    # Get current epoch date for start and end time
     local END_EPOCH=$(date "+%s")
+    local START_EPOCH=$(date "+%s" -d "${START_TIME}")
 
     # Convert epoch to timestamp for log
-    local TIMESTAMP=$(date '+%b %d %H:%M:%S' -d @${START_TIME})
+    local END_TIME=$(date '+%b %d %H:%M:%S' -d @${END_EPOCH})
 
     log "Stopping timer for ${TASK}"
 
@@ -136,8 +147,16 @@ function stop_timer {
     sed -i '$ d' ${TIMELOG}
 
     # Insert data into log
-    echo "${START_TIME}, ${TASK}, ${PROJECT}, ${TIMESTAMP}, ${UNIQ_ID}"
+    echo "${START_TIME}, ${TASK}, ${PROJECT}, ${END_TIME}, ${UNIQ_ID}" >> ${TIMELOG}
 
+    # Calculate elapsed time to output
+    elapsed_time "${START_EPOCH}" "${END_EPOCH}"
+
+    # Output message to screen
+    log "Elapsed time for ${TASK} is: ${ELAPSED_TIME}"
+
+    # Exit script successfully
+    exit 0
 }
 
 # Abort timer function
