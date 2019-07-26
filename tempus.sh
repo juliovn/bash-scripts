@@ -106,16 +106,38 @@ function start_timer {
     local START_EPOCH=$(date "+%s")
 
     # Convert epoch to timestamp for log
-    local TIMESTAMP=$(date -d @${START_EPOCH} | date '+%b %d %H:%M:%S')
+    local TIMESTAMP=$(date '+%b %d %H:%M:%S' -d @${START_EPOCH})
 
     # Insert data into log
     echo "${TIMESTAMP}, ${TASK}, ${PROJECT}, " >> ${TIMELOG}
+
+    # Exit script successfully
+    exit 0
 
 }
 
 # Stop timer function
 function stop_timer {
-    log "Stop timer"
+
+    # Gather data on current task
+    local START_TIME=$(cut -d "," -f 1 ${TIMELOG} | tail -1)
+    local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1)
+    local PROJECT=$(cut -d "," -f 3 ${TIMELOG} | tail -1)
+
+    # Get current epoch date for end time
+    local END_EPOCH=$(date "+%s")
+
+    # Convert epoch to timestamp for log
+    local TIMESTAMP=$(date '+%b %d %H:%M:%S' -d @${START_TIME})
+
+    log "Stopping timer for ${TASK}"
+
+    # Remove last line from log to re-insert
+    sed -i '$ d' ${TIMELOG}
+
+    # Insert data into log
+    echo "${START_TIME}, ${TASK}, ${PROJECT}, ${TIMESTAMP}, ${UNIQ_ID}"
+
 }
 
 # Abort timer function
@@ -178,6 +200,7 @@ shift "$(( OPTIND -1 ))"
 # Start timer here
 if [[ -n "${TASK}" ]]; then
 
+    # Check to see if there is a current timer to avoid double tasking
     if check_task_status; then
         CURRENT_TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1)
         fail_quit 1 "exit" "${CURRENT_TASK} is the current task, please stop that before starting anoter."
