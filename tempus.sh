@@ -110,7 +110,7 @@ fi
 # Start timer function
 function start_timer {
 
-    log "Starting timer for ${TASK}"
+    log "Starting timer for ${TASK}..."
 
     # Start off with current epoch date
     local START_EPOCH=$(date "+%s")
@@ -141,7 +141,7 @@ function stop_timer {
     # Convert epoch to timestamp for log
     local END_TIME=$(date '+%b %d %H:%M:%S' -d @${END_EPOCH})
 
-    log "Stopping timer for ${TASK}"
+    log "Stopping timer for ${TASK}..."
 
     # Remove last line from log to re-insert
     sed -i '$ d' ${TIMELOG}
@@ -161,7 +161,17 @@ function stop_timer {
 
 # Abort timer function
 function abort_timer {
-    log "Abort timer"
+
+    # Get task name just for the output
+    local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1)
+
+    log "Aborting timer for ${TASK}"
+
+    # Remove last line from log
+    sed -i '$ d' ${TIMELOG}
+
+    # Exit successfully
+    exit 0
 }
 
 # Function to check if there is an active task
