@@ -98,7 +98,7 @@ if [[ ! -e "${TIMELOG}" ]]; then
     touch ${TIMELOG}
 
     # Output header to log file
-    echo "Start, Task, Project, End, ID, Elapsed" >> ${TIMELOG}
+    echo "START, TASK, PROJECT, END, ID, ELAPSED" >> ${TIMELOG}
 
     fail_quit "${?}" "exit" "Could not create ${TIMELOG}"
 fi
