@@ -77,12 +77,13 @@ function convert_seconds {
 
 # Function that will output usage statement
 function usage {
-    echo "Usage: ${0} [-jdaclh] [-s TASK] [-p [PROJECT] ]" >&2
+    echo "Usage: ${0} [-tjdaclh] [-s TASK] [-p [PROJECT] ]" >&2
     echo >&2
     echo "This script is a tool to track time spent on tasks" >&2
     echo >&2
     echo "  -s TASK     Will start a new timer for TASK" >&2
     echo "  -p PROJECT  Assign TASK to PROJECT" >&2
+    echo "  -t          Display current status of timer" >&2
     echo "  -j          List all projects" >&2
     echo "  -d          Stops current running TASK and save to ${TIMELOG}" >&2
     echo "  -a          Abort current running TASK and don't save to ${TIMELOG}" >&2
@@ -172,6 +173,18 @@ function display_log {
 
 }
 
+# Function that will display current status of timer
+function display_status {
+
+    # Gather data on current task
+    local START_TIME=$(cut -d "," -f 1 ${TIMELOG} | tail -1)
+    local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1 | sed -e 's/^[ \t]*//')
+    local PROJECT=$(cut -d "," -f 3 ${TIMELOG} | tail -1 | sed -e 's/^[ \t]*//')
+
+    
+
+}
+
 # Abort timer function
 function abort_timer {
 
@@ -218,7 +231,7 @@ function check_task_status {
 }
 
 # Parse options
-while getopts s:p:jdaclh OPTION
+while getopts s:p:tjdaclh OPTION
 do
     case ${OPTION} in
         s)
@@ -226,6 +239,9 @@ do
             ;;
         p)
             PROJECT="${OPTARG}"
+            ;;
+        t)
+            echo "Call for status"
             ;;
         j)
             display_projects
