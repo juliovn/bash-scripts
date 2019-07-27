@@ -57,13 +57,19 @@ function exit_script {
 
 # Usage statement
 function usage {
-  echo "Usage: ${0} " >&2
+  echo >&2
+  echo "Usage: ${0} [-v] [-b DB1,DB2]... [-r DB1,DB2]... [-n NODE1,NODE2]... [-f DIR] [-p PASSWORD]" >&2
   echo >&2
   echo "This script is a tool to perform mysql database backups and restores." >&2
   echo >&2
-  echo "  -v  Activate output of messages" >&2
-  
-
+  echo "  -v            Activate output of messages" >&2
+  echo "  -b DATABASES  Backup DATABASES to ${DESTINATION_DIR}" >&2
+  echo "  -r DATABASES  Restore DATABASES to the server" >&2
+  echo "  -n NODES      List of hostnames or IPs to copy the backup to" >&2
+  echo "  -f FOLDER     Override default destination directory ${DESTINATION_DIR}" >&2
+  echo "  -p PASSWORD   Only use it if running automated backups" >&2
+  echo >&2
+  exit 1
 }
 
 
@@ -71,7 +77,7 @@ function usage {
 
 
 
-
+usage
 
 
 
