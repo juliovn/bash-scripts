@@ -241,7 +241,7 @@ do
             PROJECT="${OPTARG}"
             ;;
         t)
-            echo "Call for status"
+            echo "Call for status - not implemented yet :("
             ;;
         j)
             display_projects

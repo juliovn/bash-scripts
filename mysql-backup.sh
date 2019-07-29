@@ -3,13 +3,16 @@
 # This script is a tool to perform backups and restorations of mysql databases
 
 # Assign default variable to destination directory of backups
-DESTINATION_DIR="/mysql_backups"
+DESTINATION_DIR="$HOME/mysql_backups"
 
 # Set default exit status
 EXIT_STATUS=0
 
 # Set timestamp for current time (%N is nanoseconds, so it will still sort on ls)
 TIMESTAMP=$(date '+%F.%N')
+
+# Set variable for script name
+SCRIPT_NAME="${0##*/}"
 
 # Log function
 function log {
@@ -23,7 +26,7 @@ function log {
   logger -t "${0}" "${MESSAGE}"
 }
 
-# Error checking function
+# Error checking function - WIP
 function exit_script {
 
   # Get exit code
@@ -53,21 +56,55 @@ function exit_script {
   fi
 }
 
+# Error checking function
+function fail_quit {
+  # exit code
+    CODE="${1}"
+    shift
+
+    # Exit signal ("continue", "exit", "break")
+    EXIT_SIGNAL="${1}"
+    shift
+
+    # Message to output
+    MESSAGE="${@}"
+    
+    if [[ "${CODE}" -ne 0 ]]; then
+        echo "${MESSAGE}" >&2
+        
+        case ${EXIT_SIGNAL} in
+          "continue")
+                continue
+        ;;
+      "break")
+        break
+        ;;
+      "exit")
+        exit ${CODE}
+        ;;
+      *)
+        echo "Invalid signal ${EXIT_SIGNAL} passed" >&2
+        echo "Please use 'continue', 'break' or 'exit'" >&2
+                ;;
+        esac
+    fi
+}
+
 # Usage statement
 function usage {
   echo >&2
-  echo "Usage: ${0} [-vb] -d DATABASE [-b DB1,DB2]... [-r FILE ]... [-n NODE1,NODE2]... [-f DIR] [-p PASSWORD]" >&2
+  echo "Usage: ${SCRIPT_NAME} [-vb] -d DATABASE [-r FILE ]... [-n NODE1,NODE2]... [-f DIR] [-p PASSWORD]" >&2
   echo >&2
   echo "This script is a tool to perform mysql database backups and restores." >&2
   echo >&2
-  echo "  -v          Activate output of messages" >&2
-  echo "  -d DATABASE Define which DATABASE will be operated upon" >&2
-  echo "  -b          Backup DATABASE to ${DESTINATION_DIR}" >&2
-  echo "  -r FILE.sql Restore FILE.sql to DATABASE" >&2
-  echo "  -n NODES    List of hostnames or IPs to copy the backup to" >&2
-  echo "  -f FOLDER   Override default destination directory ${DESTINATION_DIR}" >&2
-  echo "  -p PASSWORD Only use it if running automated backups" >&2
-  echo "  -h          Displays this usage statement" >&2
+  echo "  -v           ::  Activate output of messages" >&2
+  echo "  -d DATABASE  ::  Define which DATABASE will be operated upon" >&2
+  echo "  -b           ::  Backup DATABASE to ${DESTINATION_DIR}" >&2
+  echo "  -r FILE.sql  ::  Restore FILE.sql to DATABASE" >&2
+  echo "  -n NODES     ::  List of hostnames or IPs to copy the backup to" >&2
+  echo "  -f DIR       ::  Override default destination directory ${DESTINATION_DIR}" >&2
+  echo "  -p PASSWORD  ::  Only use it if running automated backups" >&2
+  echo "  -h           ::  Displays this usage statement" >&2
   echo >&2
   exit 1
 }
@@ -77,11 +114,23 @@ function backup_database {
 
   local DATABASE="${1}"
 
-  local BACKUP_FILE="${DESTINATION_DIR}/${DATABASE}.${TIMESTAMP}"
+  local BACKUP_FILE="${DESTINATION_DIR}/${DATABASE}.${TIMESTAMP}.sql"
 
-  echo ${DATABASE}
-  echo ${BACKUP_FILE}
+  log "Creating backup for ${DATABASE}..."
 
+  mysqldump -u root -p${PASSWORD} ${DATABASE} &> /dev/null > ${BACKUP_FILE}
+
+  fail_quit "${?}" "exit" "Could not make back of ${DATABASE}"
+
+  log "Backup saved to ${BACKUP_FILE}"
+
+  if [[ -n "${NODES}" ]]; then
+    log "Shipping backup to remote nodes..."
+    send_to_remotes "${BACKUP_FILE}"
+  fi
+
+  # exit successfully
+  exit 0
 }
 
 # Restore database function
@@ -91,7 +140,22 @@ function restore_database {
 
   echo "Restore $DATABASES"
 
-} 
+}
+
+# Function that will ship backups to remote hosts
+function send_to_remotes {
+
+  # Define file to send
+  local FILE="${1}"
+
+  # loop through NODES list
+
+}
+
+# If no parameters are passed output usage
+if [[ "${#}" -lt 1 ]]; then
+    usage
+fi
 
 # Parse options
 while getopts hvbd:r:n:f:p: OPTION
@@ -121,7 +185,40 @@ done
 # Shift parameters
 shift "$(( OPTIND -1 ))"
 
-log "Verbose on"
+# Quick check to make sure both backup and restore haven't been chosen
+if [[ "${BACKUP}" = "true" && "${RESTORE}" = "true" ]]; then
+  fail_quit 1 "exit" "Please choose backup or restore but not both."
+fi
+
+# Check for backup signal
+if [[ "${BACKUP}" = "true" ]]; then
+
+  # Create destination dir
+  if [[ ! -e "${DESTINATION_DIR}" ]]; then
+    log "Creating ${DESTINATION_DIR} to hold backups"
+    mkdir -p ${DESTINATION_DIR}
+  fi
+  
+  # Check if DATABASE has been defined
+  if [[ -n "${DATABASE}" ]]; then
+    backup_database "${DATABASE}"
+  else
+    fail_quit 1 "exit" "Please define a database to backup with -d DATABASE"
+  fi
+fi
+
+# Check for restore signal
+if [[ "${RESTORE}" = "true" ]]; then
+
+  # Check if DATABASE has been defined
+  if [[ -n "${DATABASE}" ]]; then
+    restore_database "${DATABASE}"
+  else
+    fail_quit 1 "exit" "Please define a database to restore with -d DATABASE"
+  fi
+fi
+
+
 
 # Finish script
 exit ${EXIT_STATUS}
