@@ -272,9 +272,9 @@ shift "$(( OPTIND -1 ))"
 if [[ -n "${TASK}" ]]; then
 
     # Check to see if there is a current timer to avoid double tasking
-    if check_task_status; then
+    if check_task_status ; then
         CURRENT_TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1)
-        fail_quit 1 "exit" "${CURRENT_TASK} is the current task, please stop that before starting anoter."
+        fail_quit 1 "exit" "${CURRENT_TASK} is the current task, please stop that before starting another."
     fi
 
     start_timer ${PROJECT}
