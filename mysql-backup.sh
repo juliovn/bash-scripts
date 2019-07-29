@@ -9,7 +9,7 @@ DESTINATION_DIR="$HOME/mysql_backups"
 EXIT_STATUS=0
 
 # Set timestamp for current time (%N is nanoseconds, so it will still sort on ls)
-TIMESTAMP=$(date '+%F.%N')
+TIMESTAMP=$(date '+%F-%N')
 
 # Set variable for script name
 SCRIPT_NAME="${0##*/}"
@@ -93,12 +93,12 @@ function fail_quit {
 # Usage statement
 function usage {
   echo >&2
-  echo "Usage: ${SCRIPT_NAME} [-vb] -d DATABASE [-r FILE ]... [-n NODE1,NODE2]... [-f DIR] [-p PASSWORD]" >&2
+  echo "Usage: ${SCRIPT_NAME} -d DATABASE [-vb] [-r FILE ]... [-n NODE1,NODE2]... [-f DIR] [-p PASSWORD]" >&2
   echo >&2
   echo "This script is a tool to perform mysql database backups and restores." >&2
   echo >&2
-  echo "  -v           ::  Activate output of messages" >&2
   echo "  -d DATABASE  ::  Define which DATABASE will be operated upon" >&2
+  echo "  -v           ::  Activate output of messages" >&2
   echo "  -b           ::  Backup DATABASE to ${DESTINATION_DIR}" >&2
   echo "  -r FILE.sql  ::  Restore FILE.sql to DATABASE" >&2
   echo "  -n NODES     ::  List of hostnames or IPs to copy the backup to" >&2
@@ -112,34 +112,48 @@ function usage {
 # Backup database function
 function backup_database {
 
-  local DATABASE="${1}"
-
-  local BACKUP_FILE="${DESTINATION_DIR}/${DATABASE}.${TIMESTAMP}.sql"
+  # Generate name for backup file
+  local BACKUP_FILE="${DESTINATION_DIR}/${DATABASE}-${TIMESTAMP}.sql"
 
   log "Creating backup for ${DATABASE}..."
 
+  # Dump database to file
   mysqldump -u root -p${PASSWORD} ${DATABASE} &> /dev/null > ${BACKUP_FILE}
 
-  fail_quit "${?}" "exit" "Could not make back of ${DATABASE}"
+  if [[ "${?}" -ne 0 ]]; then
+    echo "Could not dump ${DATABASE} into ${BACKUP_FILE}" >&2
+    # clean up backup file
+    rm -f ${BACKUP_FILE}
+    exit 1
+  fi
 
-  log "Backup saved to ${BACKUP_FILE}"
-
+  # Check if NODES is defined and call function to ship backups to remote
   if [[ -n "${NODES}" ]]; then
     log "Shipping backup to remote nodes..."
     send_to_remotes "${BACKUP_FILE}"
   fi
 
   # exit successfully
+  log "Backup saved to ${BACKUP_FILE}"
   exit 0
 }
 
 # Restore database function
 function restore_database {
 
-  local DATABASES="${1}"
+  # Try to create database in case it does not exist
+  log "Creating database..."
+  mysqladmin -u root -p${PASSWORD} create ${DATABASE} &> /dev/null
 
-  echo "Restore $DATABASES"
+  # Restore database with sql file
+  log "Restoring database..."
+  mysql -u root -p${PASSWORD} ${DATABASE} &> /dev/null < ${RESTORE}
 
+  fail_quit "${?}" "exit" "Could not restore ${DATABASE} with file ${RESTORE}"
+
+  # exit successfully
+  log "Restore of ${DATABASE} with file ${RESTORE} completed."
+  exit 0
 }
 
 # Function that will ship backups to remote hosts
@@ -170,7 +184,7 @@ do
     b)
       BACKUP="true" ;;
     r)
-      RESTORE="true" ;;
+      RESTORE="${OPTARG}" ;;
     n)
       NODES="${OPTARG}" ;;
     f)
@@ -185,11 +199,6 @@ done
 # Shift parameters
 shift "$(( OPTIND -1 ))"
 
-# Quick check to make sure both backup and restore haven't been chosen
-if [[ "${BACKUP}" = "true" && "${RESTORE}" = "true" ]]; then
-  fail_quit 1 "exit" "Please choose backup or restore but not both."
-fi
-
 # Check for backup signal
 if [[ "${BACKUP}" = "true" ]]; then
 
@@ -201,23 +210,29 @@ if [[ "${BACKUP}" = "true" ]]; then
   
   # Check if DATABASE has been defined
   if [[ -n "${DATABASE}" ]]; then
-    backup_database "${DATABASE}"
+    backup_database
   else
     fail_quit 1 "exit" "Please define a database to backup with -d DATABASE"
   fi
+
 fi
 
-# Check for restore signal
-if [[ "${RESTORE}" = "true" ]]; then
+# Check if restore file is defined
+if [[ -n "${RESTORE}" ]]; then
+
+  # Check if restore file exists
+  if [[ ! -e "${RESTORE}" ]]; then
+    fail_quit 1 "exit" "File ${RESTORE} does not exist."
+  fi
 
   # Check if DATABASE has been defined
   if [[ -n "${DATABASE}" ]]; then
-    restore_database "${DATABASE}"
+    restore_database
   else
     fail_quit 1 "exit" "Please define a database to restore with -d DATABASE"
   fi
-fi
 
+fi
 
 
 # Finish script
