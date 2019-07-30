@@ -181,7 +181,24 @@ function display_status {
     local TASK=$(cut -d "," -f 2 ${TIMELOG} | tail -1 | sed -e 's/^[ \t]*//')
     local PROJECT=$(cut -d "," -f 3 ${TIMELOG} | tail -1 | sed -e 's/^[ \t]*//')
 
-    
+    if check_task_status ; then
+        # Get current epoch and convert starting time to epoch
+        local END_EPOCH=$(date "+%s")
+        local START_EPOCH=$(date "+%s" -d "${START_TIME}")
+
+        # Calculate elapsed time
+        elapsed_time "${START_EPOCH}" "${END_EPOCH}"
+
+        # Output result
+        log "Current task is ${TASK} and elapsed time is ${ELAPSED_TIME}"
+
+        # Since this is only for display, exit here and dont touch the log
+        exit 0
+    else
+        # Exit script
+        log "No active timer."
+        exit 0
+    fi
 
 }
 
@@ -241,7 +258,7 @@ do
             PROJECT="${OPTARG}"
             ;;
         t)
-            echo "Call for status - not implemented yet :("
+            display_status
             ;;
         j)
             display_projects
