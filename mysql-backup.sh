@@ -74,6 +74,7 @@ function fail_quit {
         
         case ${EXIT_SIGNAL} in
           "continue")
+                EXIT_STATUS="${CODE}"
                 continue
         ;;
       "break")
@@ -162,7 +163,28 @@ function send_to_remotes {
   # Define file to send
   local FILE="${1}"
 
+  # Define timeout of 2 so doesn't hang for too long if host is down
+  local SSH_OPTIONS="-o ConnectTimeout=2"
+
   # loop through NODES list
+  for NODE in $(echo "${NODES}" | tr "," "\n"); do
+    # Assign command to variable
+    SSH_CMD="ssh ${SSH_OPTIONS} ${NODE}"
+
+    # Create directory to hold backups on remote host
+    ${SSH_CMD} "mkdir -p ${DESTINATION_DIR}" &> /dev/null
+
+    # Copy FILE into the directory
+    scp ${FILE} ${NODE}:${DESTINATION_DIR} &> /dev/null
+
+    # Check for errors
+    fail_quit "${?}" "continue" "Could not copy backup ${FILE} to remote node ${NODE}"
+
+    # Continue successfully
+    log "Successfully copied ${FILE} to remote node ${NODE}"
+    continue
+
+  done
 
 }
 
