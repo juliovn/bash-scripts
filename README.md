@@ -8,3 +8,6 @@ Simulates trash bin behaviour seen on other systems.
 
 ### tempus.sh
 Time tracking utility for the command line.
+
+### watchdog.sh
+Service monitoring script
