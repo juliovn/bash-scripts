@@ -15,12 +15,15 @@ CONF_FILE="$HOME/watchdog.conf.${HOSTNAME}"
 # Log file
 LOG_FILE="$HOME/watchdog.log.${HOSTNAME}"
 
+# Include the path to the pidof command
+PATH="${PATH}:/usr/sbin"
+
 # Set timestamp
 TIMESTAMP=$(date '+%F_%H:%M:%S')
 
 # Log function
 function log {
-  local MESSAGE="${0}"
+  local MESSAGE="${@}"
 
   if [[ "${VERBOSE}" = "true" ]]; then
     # Output to screen if verbose is true
@@ -89,7 +92,7 @@ fi
 
 # Main function that will restart services
 # This will take two args:
-# 1 - name of the service
+# 1 - name of the service/process
 # @ - command to restart
 function restart_service {
 
@@ -102,22 +105,44 @@ function restart_service {
 
   log "${TIMESTAMP} | Checking if ${SERVICE_NAME} is running..."
 
-  systemctl status ${SERVICE_NAME} &> /dev/null
+  local SERVICE_PID=$(pidof ${SERVICE_NAME})
 
-  if [[ "${?}" -ne 0 ]]; then
-    # Service is not up, restart it
+  if [[ -n "${SERVICE_PID}" ]]; then
+    # Service is running
+    log "${TIMESTAMP} | ${SERVICE_NAME} is running with PID(s): ${SERVICE_PID}"
+  else
     log "${TIMESTAMP} | ${SERVICE_NAME} is not running, restarting..."
+    
     ${SERVICE_CMD} &>> ${LOG_FILE}
     
-    fail_quit "${?}" "continue" "Could not restart ${SERVICE_NAME} by running ${SERVICE_CMD}"
+    fail_quit "${?}" "continue" "Could not start ${SERVICE_NAME} with ${SERVICE_CMD}"
 
-    log "${TIMESTAMP} | ${SERVICE_NAME} successfully restarted."
-    return 1
-  else
-    # Service is up
-    log "${TIMESTAMP} | ${SERVICE_NAME} is up."
-    return 0
+    log "${TIMESTAMP} | ${SERVICE_NAME} restarted successfully"
   fi
+
+}
+
+# Send report function
+function send_report {
+
+ # Temp log file
+ TMP_LOG_FILE="tmp-log-file" 
+
+  # Grep log file for listings for current day
+  # This is to avoid sending a large file as the log file
+  # can get quite big overtime
+  grep $(date '+%F') ${LOG_FILE} &>> ${TMP_LOG_FILE}
+
+  cat ${TMP_LOG_FILE}
+
+  rm -f ${TMP_LOG_FILE}
+
+  # Loop through list of emails
+  for EMAIL in $(echo "${1}" | tr "," "\n"); do
+
+    echo "${EMAIL}"
+
+  done
 
 }
 
@@ -143,8 +168,18 @@ fi
 
 while read LINE
 do
+  # Check if line is empty
+  if [[ -z "${LINE}" ]]; then
+    continue
+  fi
+
   restart_service ${LINE}
 done < ${CONF_FILE}
+
+# Send report
+if [[ -n "${EMAILS}" ]]; then
+  send_report "${EMAILS}"
+fi
 
 # Finish script
 exit ${EXIT_STATUS}
