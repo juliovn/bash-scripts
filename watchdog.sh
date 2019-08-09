@@ -13,7 +13,7 @@ SCRIPT_NAME="${0##*/}"
 CONF_FILE="$HOME/watchdog.conf.${HOSTNAME}"
 
 # Log file
-LOG_FILE="$HOME/watchdog.log.${HOSTNAME}"
+LOG_FILE="/tmp/${SCRIPT_NAME}.log.${HOSTNAME}.$$"
 
 # Include the path to the pidof command
 PATH="${PATH}:/usr/sbin"
@@ -80,7 +80,7 @@ function usage {
   echo >&2
   echo "  -v              Activate message output" >&2
   echo "  -c  CONF_FILE   Override default configuration file ${CONF_FILE}" >&2
-  echo "  -e  EMAILS      List of emails to send ${LOG_FILE} report" >&2
+  echo "  -e  EMAILS      List of emails to send the log file report" >&2
   echo >&2
   exit 1
 }
@@ -125,22 +125,14 @@ function restart_service {
 # Send report function
 function send_report {
 
- # Temp log file
- TMP_LOG_FILE="tmp-log-file" 
-
-  # Grep log file for listings for current day
-  # This is to avoid sending a large file as the log file
-  # can get quite big overtime
-  grep $(date '+%F') ${LOG_FILE} &>> ${TMP_LOG_FILE}
-
-  cat ${TMP_LOG_FILE}
-
-  rm -f ${TMP_LOG_FILE}
-
   # Loop through list of emails
   for EMAIL in $(echo "${1}" | tr "," "\n"); do
 
-    echo "${EMAIL}"
+    local SUBJECT="${SCRIPT_NAME} report from ${HOSTNAME} [${LOG_FILE}]"
+    local SENDER="${HOSTNAME}"
+    local RECEIVER="${EMAIL}"
+
+    mail -s "${SUBJECT}" -S from=${SENDER} "${RECEIVER}" < ${LOG_FILE}
 
   done
 
@@ -178,6 +170,12 @@ done < ${CONF_FILE}
 
 # Send report
 if [[ -n "${EMAILS}" ]]; then
+
+  # Check if there has been any services restarted, otherwise dont send mail
+  if ! grep -q "not running" ${LOG_FILE} ; then
+    fail_quit 1 "exit" "No services restarted, report was not sent."
+  fi
+
   send_report "${EMAILS}"
 fi
 
