@@ -65,7 +65,7 @@ if [[ "${#}" -lt 1 ]]; then
 fi
 
 # Check if file is empty
-if [[ -n "${FILE}" ]]; then
+if [[ -z "${FILE}" ]]; then
   echo "Please specify the filename destination for the .iso" >&2
   exit 1
 
