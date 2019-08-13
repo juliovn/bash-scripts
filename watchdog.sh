@@ -132,7 +132,9 @@ function send_report {
     local SENDER="${HOSTNAME}"
     local RECEIVER="${EMAIL}"
 
-    mail -s "${SUBJECT}" -S from=${SENDER} "${RECEIVER}" < ${LOG_FILE}
+    mail -s "${SUBJECT}" -S from=${SENDER} "${RECEIVER}" <<EOF
+    $(cat ${LOG_FILE})
+EOF
 
   done
 
