@@ -1,6 +1,6 @@
 # Collection of bash scripts
 
-### poor-mans-nagios,sh
+### poor-mans-nagios.sh
 Resource monitoring script, for now can only monitor hosts (by ping) and web domains (by curl), also sends emails if resources are down
 
 ### mysql-backup.sh
