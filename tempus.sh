@@ -17,6 +17,9 @@ TIMELOG="$HOME/.timelog"
 # Generate ID for logging the task entries
 UNIQ_ID=$(date +%s%N${RANDOM}${RANDOM} | sha256sum | head -c6)
 
+# Set variable for script name
+SCRIPT_NAME="${0##*/}"
+
 # Function that logs messages to standard output and to syslog
 function log {
     local MESSAGE="${@}"
@@ -77,7 +80,7 @@ function convert_seconds {
 
 # Function that will output usage statement
 function usage {
-    echo "Usage: ${0} [-tjdaclh] [-s TASK] [-p [PROJECT] ]" >&2
+    echo "Usage: ${SCRIPT_NAME} [options] [-s TASK] [-p PROJECT]" >&2
     echo >&2
     echo "This script is a tool to track time spent on tasks" >&2
     echo >&2
@@ -85,10 +88,10 @@ function usage {
     echo "  -p PROJECT  Assign TASK to PROJECT" >&2
     echo "  -t          Display current status of timer" >&2
     echo "  -j          List all projects" >&2
-    echo "  -d          Stops current running TASK and save to ${TIMELOG}" >&2
-    echo "  -a          Abort current running TASK and don't save to ${TIMELOG}" >&2
-    echo "  -c          Cleanup ${TIMELOG} deleting all entries" >&2
-    echo "  -l          Displays contents of ${TIMELOG} to screen and formatted" >&2
+    echo "  -d          Stops current running TASK and save to timelog" >&2
+    echo "  -a          Abort current running TASK and don't save to timelog" >&2
+    echo "  -c          Cleanup timelog deleting all entries" >&2
+    echo "  -l          Displays contents of timelog to screen and formatted" >&2
     echo "  -h          Displays this usage statement" >&2
     exit 1
 }
