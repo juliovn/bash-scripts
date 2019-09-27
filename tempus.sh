@@ -80,7 +80,7 @@ function convert_seconds {
 
 # Function that will output usage statement
 function usage {
-    echo "Usage: ${SCRIPT_NAME} [options] [-s TASK] [-p PROJECT]" >&2
+    echo "Usage: ${SCRIPT_NAME} [ options ] [ -s TASK ] [ -p PROJECT ]" >&2
     echo >&2
     echo "This script is a tool to track time spent on tasks" >&2
     echo >&2
@@ -331,11 +331,21 @@ if [[ "${CLEANUP_SIGNAL}" = "true" ]]; then
   # Get confirmation from user
   read -p "This will remove all data from ${TIMELOG}. Are you sure you want to continue? [y/n] " CONFIRMATION
 
+  # If confirmation not given, exit
   if [[ "${CONFIRMATION}" != "y" ]]; then
     fail_quit 1 "exit" "Confirmation not given for cleanup, exiting..."
   fi
 
-  log "Cleanup up ${TIMELOG}..."
+  # Ask user if they want to backup timelog before cleaning
+  read -p "Would you like to backup ${TIMELOG} before cleaning up? [y/n] " CONFIRMATION
+
+  # If confirmation given backup timelog
+  if [[ "${CONFIRMATION}" = "y" ]]; then
+    cp ${TIMELOG} ${TIMELOG}.$(date +%F) &> /dev/null
+    log "Saved backup timelog to ${TIMELOG}.$(date +%F)"
+  fi
+
+  log "Cleaning up up ${TIMELOG}..."
 
   rm -f ${TIMELOG}
 
