@@ -53,6 +53,9 @@ yum -y install docker-engine
 # Add user to docker group
 usermod -a -G docker ${USERNAME}
 
+# Start and enable docker service
+systemctl start docker ; systemctl enable docker
+
 # Finish script
 exit ${EXIT_STATUS}
 
