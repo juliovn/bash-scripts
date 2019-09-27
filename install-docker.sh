@@ -28,7 +28,7 @@ if [ $# -lt 1 ]; then
 fi
 
 # Check if user exists
-id -u ${USERNAME}
+id -u ${USERNAME} &> /dev/null
 if [[ "${?}" -ne 0 ]]; then
 	echo "${USERNAME} does not exist..." >&2
 	exit 1
