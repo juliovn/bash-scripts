@@ -29,7 +29,7 @@ fi
 
 # Check if user exists
 id -u ${USERNAME}
-if [[ "${?}" -ne 1 ]]; then
+if [[ "${?}" -ne 0 ]]; then
 	echo "${USERNAME} does not exist..." >&2
 	exit 1
 fi
