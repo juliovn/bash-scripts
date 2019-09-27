@@ -21,3 +21,6 @@ Script to extract cdrom device into .iso file
 ### find-bots.sh ###
 Find IPs from apache log with a lot of hits (count, IP and location)
 
+### install-docker.sh ###
+Install docker.... (CentOS 7)
+
