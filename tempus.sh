@@ -82,7 +82,7 @@ function convert_seconds {
 function usage {
     echo "Usage: ${SCRIPT_NAME} [ options ] [ -s TASK ] [ -p PROJECT ]" >&2
     echo >&2
-    echo "This script is a tool to track time spent on tasks" >&2
+    echo "This script is a utility to track time spent on tasks" >&2
     echo >&2
     echo "  -s TASK     Will start a new timer for TASK" >&2
     echo "  -p PROJECT  Assign TASK to PROJECT" >&2
@@ -90,7 +90,7 @@ function usage {
     echo "  -j          List all projects" >&2
     echo "  -d          Stops current running TASK and save to timelog" >&2
     echo "  -a          Abort current running TASK and don't save to timelog" >&2
-    echo "  -c          Cleanup timelog deleting all entries" >&2
+    echo "  -c          Cleanup timelog deleting all entries [backup optional]" >&2
     echo "  -l          Displays contents of timelog to screen and formatted" >&2
     echo "  -h          Displays this usage statement" >&2
     exit 1

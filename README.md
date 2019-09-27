@@ -18,3 +18,6 @@ Service monitoring script
 ### create-iso-from-cdrom.sh
 Script to extract cdrom device into .iso file
 
+### find-bots.sh ###
+Find IPs from apache log with a lot of hits (count, IP and location)
+
