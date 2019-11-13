@@ -80,11 +80,12 @@ function myExit {
 
 function usage {
 	echo >&2
-	echo "Usage: ${SCRIPT_NAME} [-v]"
+	echo "Usage: ${SCRIPT_NAME} [-vh]"
 	echo >&2
 	echo "This script is a bash script bootstrap skeleton" >&2
 	echo >&2
-	echo "	-v	Activate message output"
+	echo "	-v	Activate message output (recommended)"
+	echo "	-h	Display this message"
 	echo >&2
 	exit 1
 }
@@ -95,10 +96,11 @@ if [[ "${#}" -lt 1 ]]; then
 fi
 
 # Parse options
-while getopts v OPTION
+while getopts vh OPTION
 do
 	case ${OPTION} in
 		v) VERBOSE="true" ;;
+		h) usage ;;
 		?) usage ;;
 	esac
 done
