@@ -2,7 +2,11 @@
 
 Usage statements for every script here can be accessed by running the script without any arguments or options as in:
 
-`./poor-mans-nagios.sh`
+`./mysql-backup.sh`
+
+Some exceptions to that rule can be accessed via -h (for help) as in:
+
+`./create-iso-from-cdrom.sh -h`
 
 All scripts are WIP as they can all be improved of course, but some are marked as such only to denote they are literally not functional yet
 
