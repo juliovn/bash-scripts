@@ -10,7 +10,7 @@ EXIT_STATUS=0
 SCRIPT_NAME="${0##*/}"
 
 # Log file
-LOG_FILE="/tmp/$SCRIPT_NAME.$$"
+LOG_FILE="/tmp/$SCRIPT_NAME.$(date '+%N')"
 
 # Set timestamp
 TIMESTAMP=$(date '+%F_%H:%M:%S')
