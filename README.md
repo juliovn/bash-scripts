@@ -1,7 +1,5 @@
 # Collection of bash scripts
 
-<<<<<<< HEAD
-=======
 Usage statements for every script here can be accessed by running the script without any arguments or options as in:
 
 `./mysql-backup.sh`
@@ -18,7 +16,6 @@ Skeleton script (logging, custom exit function, option parsing, sudo privileges)
 ### install-docker.sh
 Install docker (yum)
 
->>>>>>> b793214cb10f7c4b7f3ec26fda337b6be01a74c6
 ### poor-mans-nagios.sh
 Resource monitoring script, for now can only monitor hosts (by ping) and web domains (by curl), also sends emails if resources are down
 
