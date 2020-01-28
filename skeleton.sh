@@ -81,11 +81,11 @@ function myExit {
 
 function usage {
 	echo >&2
-	echo "Usage: ${SCRIPT_NAME} [-v]"
+	echo "Usage: ${SCRIPT_NAME} [-v]" >&2
 	echo >&2
 	echo "This script is a bash script bootstrap skeleton" >&2
 	echo >&2
-	echo "	-v	Activate message output"
+	echo "	-v	Activate message output" >&2
 	echo >&2
 	exit 1
 }
