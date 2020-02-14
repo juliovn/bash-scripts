@@ -48,7 +48,7 @@ EOF
 yum -y update
 
 # Install docker
-yum -y install docker
+yum -y install docker-ce docker-ce-cli
 
 # Add user to docker group
 usermod -a -G docker ${USERNAME}
