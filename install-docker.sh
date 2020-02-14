@@ -48,7 +48,7 @@ EOF
 yum -y update
 
 # Install docker
-yum -y install docker-engine
+yum -y install docker
 
 # Add user to docker group
 usermod -a -G docker ${USERNAME}
