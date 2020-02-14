@@ -14,7 +14,7 @@ All scripts are WIP as they can all be improved of course, but some are marked a
 Skeleton script (logging, custom exit function, option parsing, sudo privileges)
 
 ### install-docker.sh
-Install docker (yum)
+Install docker (yum) - this is a bit patchy since Docker changed repo URLs to download.docker.com
 
 ### poor-mans-nagios.sh
 Resource monitoring script, for now can only monitor hosts (by ping) and web domains (by curl), also sends emails if resources are down
@@ -39,3 +39,6 @@ Find IPs from apache log with a lot of hits (count, IP and location)
 
 ### lamp-stack-setup.sh - WIP
 Automated installation of LAMP stack (yum)
+
+### run-everywhere.sh
+Very convenient script that will run a command on a list of different servers (must have ssh key login configured to each server)
