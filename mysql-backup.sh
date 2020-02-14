@@ -21,39 +21,6 @@ function log {
   if [[ "${VERBOSE}" = "true" ]]; then
     echo "${MESSAGE}"
   fi
-
-  # send to syslog
-  logger -t "${0}" "${MESSAGE}"
-}
-
-# Error checking function - WIP
-function exit_script {
-
-  # Get exit code
-  local EXIT_CODE="${1}"
-  shift
-
-  # Exit signal ("continue", "exit", "break")
-  local EXIT_SIGNAL="${1}"
-  shift
-
-  # Message to output
-  local MESSAGE="${@}"
-
-  # Check for error signal, bit of WET here (Write Everything Twice), but at least it's in a function
-  if [[ "${EXIT_CODE}" -ne 0 ]]; then
-    case ${EXIT_SIGNAL} in
-      "continue") log "${MESSAGE}" ; continue ;;
-      "break") log "${MESSAGE}" ; break ;;
-      "exit") log "${MESSAGE}" ; exit "${EXIT_CODE}" ;;
-    esac
-  else
-    case ${EXIT_SIGNAL} in
-      "continue") log "${MESSAGE}" ; continue ;;
-      "break") log "${MESSAGE}" ; break ;;
-      "exit") log "${MESSAGE}" ; exit "${EXIT_CODE}" ;;
-    esac
-  fi
 }
 
 # Error checking function
@@ -164,7 +131,7 @@ function send_to_remotes {
   local FILE="${1}"
 
   # Define timeout of 2 so doesn't hang for too long if host is down
-  local SSH_OPTIONS="-o ConnectTimeout=2"
+  local SSH_OPTIONS="-o ConnectTimeout=4"
 
   # loop through NODES list
   for NODE in $(echo "${NODES}" | tr "," "\n"); do
